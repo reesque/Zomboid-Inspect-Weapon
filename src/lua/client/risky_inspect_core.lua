@@ -1,17 +1,17 @@
 -- @author Risky
 -- Core file, contains all the event listeners and windows handler
 
-require "ISUI/ISCollapsableWindow"
+require "ISUI/ISCollapsableWindowJoypad"
 require "TimedActions/ISEquipWeaponAction"
 
 riskyInspectWindow = nil
 riskyShowPotentialAttachment = true
 
-riskyUI = ISCollapsableWindow:derive("riskyUI")
+riskyUI = ISCollapsableWindowJoypad:derive("riskyUI")
 
 function riskyUI:new(x, y, width, height)
     local o = {}
-	o = ISCollapsableWindow:new(x, y, width, height)
+	o = ISCollapsableWindowJoypad:new(x, y, width, height)
 
     setmetatable(o, self)
     self.__index = self
@@ -34,6 +34,10 @@ function riskyUI:new(x, y, width, height)
         end
     end
 
+    -- Hack to get joypad focus on create
+    setJoypadFocus(getPlayer():getPlayerNum(), o)
+    o.currentFocus = o
+
 	return o
 end
 
@@ -55,7 +59,7 @@ function riskyUI:update()
 end
 
 function riskyUI:prerender()
-    ISCollapsableWindow.prerender(self)
+    ISCollapsableWindowJoypad.prerender(self)
 
     if getPlayer():getPrimaryHandItem() ~= nil and getPlayer():getPrimaryHandItem():IsWeapon() then
         local weapon = getPlayer():getPrimaryHandItem()
@@ -209,22 +213,27 @@ function riskyUI:renderInventory()
 
         -- Repair icon
         local fixingList = FixingManager.getFixes(weapon)
+        local repairBtn = nil
 
         if not fixingList:isEmpty() and conditionPerc < 100 then
-            local repairButton = ISButton:new(66 + getTextManager():MeasureStringX(UIFont.Small, repairText), 70, 15, 15, "", self, function(self, button)
-                local context = ISContextMenu.get(getPlayer():getPlayerNum(), getMouseX(), getMouseY())
-                local fixOption = context:addOption(getText("ContextMenu_Repair"), getPlayer():getInventory():getItems(), nil);
-                local subMenuFix = ISContextMenu:getNew(context);
-                context:addSubMenu(fixOption, subMenuFix);
-                ISInventoryPaneContextMenu.buildFixingMenu(weapon, getPlayer():getPlayerNum(), fixingList:get(0), fixOption, subMenuFix)
-                context:addToUIManager()
-            end);
-            repairButton:initialise();
-            repairButton.borderColor.a = 0.0;
-            repairButton.backgroundColor.a = 0;
-            repairButton.backgroundColorMouseOver.a = 0;
-            repairButton:setImage(getTexture("media/ui/Panel_info_button.png"));
-            self:addChild(repairButton);
+            local x = 66 + getTextManager():MeasureStringX(UIFont.Small, repairText)
+            local y = 70
+            repairBtn = repairButton:new(x, y, 15, 15, "", self, 
+                function(self, button)
+                    local context = ISContextMenu.get(getPlayer():getPlayerNum(), riskyInspectWindow.x + x, riskyInspectWindow.y + y)
+                    local fixOption = context:addOption(getText("ContextMenu_Repair"), getPlayer():getInventory():getItems(), nil);
+                    local subMenuFix = ISContextMenu:getNew(context);
+                    context:addSubMenu(fixOption, subMenuFix);
+                    ISInventoryPaneContextMenu.buildFixingMenu(weapon, getPlayer():getPlayerNum(), fixingList:get(0), fixOption, subMenuFix)
+                    context:addToUIManager()
+                    context.origin = riskyInspectWindow
+                    setJoypadFocus(getPlayer():getPlayerNum(), context)
+                end
+            );
+            repairBtn:initialise();
+            self:addChild(repairBtn);
+
+            self.downFocus = repairBtn
         end
 
         self.panelWidth = math.max(getTextManager():MeasureStringX(UIFont.Medium, weapon:getDisplayName()),
@@ -281,9 +290,9 @@ function riskyUI:renderInventory()
             self.panelHeight = self.panelHeight + 180
 
             -- Canon
-            item = attachmentButton:new(20, 130, 40, 40, weapon:getCanon(), weapon, WeaponPart.TYPE_CANON)
-            item:bringToTop()
-            self:addChild(item)
+            canonBtn = attachmentButton:new(20, 130, 40, 40, weapon:getCanon(), weapon, WeaponPart.TYPE_CANON)
+            canonBtn:bringToTop()
+            self:addChild(canonBtn)
 
             -- Clip - DISABLE UNTIL THEY INTRODUCE CLIP ATTACHMENTS
             --item = attachmentButton:new(20, 180, 40, 40, weapon:getClip(), weapon, WeaponPart.TYPE_CLIP)
@@ -296,14 +305,14 @@ function riskyUI:renderInventory()
                 tempContainer:clear()
                 tempContainer = nil
             end
-            item = magazineButton:new(20, 180, 40, 40, magazine, weapon)
-            item:bringToTop()
-            self:addChild(item)
+            magazineBtn = magazineButton:new(20, 180, 40, 40, magazine, weapon)
+            magazineBtn:bringToTop()
+            self:addChild(magazineBtn)
 
             -- Recoil Pad
-            item = attachmentButton:new(20, 230, 40, 40, weapon:getRecoilpad(), weapon, WeaponPart.TYPE_RECOILPAD)
-            item:bringToTop()
-            self:addChild(item)
+            padBtn = attachmentButton:new(20, 230, 40, 40, weapon:getRecoilpad(), weapon, WeaponPart.TYPE_RECOILPAD)
+            padBtn:bringToTop()
+            self:addChild(padBtn)
 
             local canonWidth, clipWidth, recoilPadWidth, scopeWidth, slingWidth, stockWidth
 
@@ -319,20 +328,50 @@ function riskyUI:renderInventory()
                                         canonWidth, clipWidth, recoilPadWidth)
 
             -- Scope
-            item = attachmentButton:new(leftWidth + 100, 130, 40, 40, weapon:getScope(), weapon, WeaponPart.TYPE_SCOPE)
-            item:bringToTop()
-            self:addChild(item)
+            scopeBtn = attachmentButton:new(leftWidth + 100, 130, 40, 40, weapon:getScope(), weapon, WeaponPart.TYPE_SCOPE)
+            scopeBtn:bringToTop()
+            self:addChild(scopeBtn)
 
             -- Sling
-            item = attachmentButton:new(leftWidth + 100, 180, 40, 40, weapon:getSling(), weapon, WeaponPart.TYPE_SLING)
-            item:bringToTop()
-            self:addChild(item)
+            slingBtn = attachmentButton:new(leftWidth + 100, 180, 40, 40, weapon:getSling(), weapon, WeaponPart.TYPE_SLING)
+            slingBtn:bringToTop()
+            self:addChild(slingBtn)
 
             -- Stock
-            item = attachmentButton:new(leftWidth + 100, 230, 40, 40, weapon:getStock(), weapon, WeaponPart.TYPE_STOCK)
-            item:bringToTop()
-            self:addChild(item)
+            stockBtn = attachmentButton:new(leftWidth + 100, 230, 40, 40, weapon:getStock(), weapon, WeaponPart.TYPE_STOCK)
+            stockBtn:bringToTop()
+            self:addChild(stockBtn)
 
+            -- Joypad focus bind
+            canonBtn.downFocus = magazineBtn
+            canonBtn.rightFocus = scopeBtn
+
+            magazineBtn.upFocus = canonBtn
+            magazineBtn.downFocus = padBtn
+            magazineBtn.rightFocus = slingBtn
+
+            padBtn.upFocus = magazineBtn
+            padBtn.rightFocus = stockBtn
+
+            scopeBtn.downFocus = slingBtn
+            scopeBtn.leftFocus = canonBtn
+
+            slingBtn.upFocus = scopeBtn
+            slingBtn.downFocus = stockBtn
+            slingBtn.leftFocus = magazineBtn
+
+            stockBtn.upFocus = slingBtn
+            stockBtn.leftFocus = padBtn
+            
+            if repairBtn == nil then
+                self.downFocus = canonBtn
+            else
+                repairBtn.downFocus = canonBtn
+                canonBtn.upFocus = repairBtn
+                scopeBtn.upFocus = repairBtn
+            end
+
+            -- Measure width
             if weapon:getScope() ~= nil then scopeWidth = getTextManager():MeasureStringX(UIFont.Small, weapon:getScope():getDisplayName()) else scopeWidth = 0 end
             if weapon:getSling() ~= nil then slingWidth = getTextManager():MeasureStringX(UIFont.Small, weapon:getSling():getDisplayName()) else slingWidth = 0 end
             if weapon:getStock() ~= nil then stockWidth = getTextManager():MeasureStringX(UIFont.Small, weapon:getStock():getDisplayName()) else stockWidth = 0 end
@@ -353,11 +392,65 @@ function riskyUI:renderInventory()
     self:setHeight(self.panelHeight)
 end
 
+-- GAMEPAD
+
+function riskyUI:onJoypadDirDown(joypadData)
+    if self.currentFocus.downFocus ~= nil then
+        self.currentFocus.downFocus.isJoypadFocused = true
+        self.currentFocus.isJoypadFocused = false
+        self.currentFocus = self.currentFocus.downFocus
+    end
+end
+
+function riskyUI:onJoypadDirUp(joypadData)
+    if self.currentFocus.upFocus ~= nil then
+        self.currentFocus.upFocus.isJoypadFocused = true
+        self.currentFocus.isJoypadFocused = false
+        self.currentFocus = self.currentFocus.upFocus
+    end
+end
+
+function riskyUI:onJoypadDirLeft(joypadData)
+    if self.currentFocus.leftFocus ~= nil then
+        self.currentFocus.leftFocus.isJoypadFocused = true
+        self.currentFocus.isJoypadFocused = false
+        self.currentFocus = self.currentFocus.leftFocus
+    end
+end
+
+function riskyUI:onJoypadDirRight(joypadData)
+    if self.currentFocus.rightFocus ~= nil then
+        self.currentFocus.rightFocus.isJoypadFocused = true
+        self.currentFocus.isJoypadFocused = false
+        self.currentFocus = self.currentFocus.rightFocus
+    end
+end
+
+function riskyUI:onJoypadDown(button)
+	if button == Joypad.BButton then
+        self:close()
+    elseif button == Joypad.AButton then
+        self.currentFocus:joypadConfirm()
+	end
+end
+
+function riskyUI:onGainJoypadFocus(joypadData)
+	self.drawJoypadFocus = true
+end
+
+function riskyUI:onLoseJoypadFocus(joypadData)
+	self.drawJoypadFocus = false
+end
+
+-- HELPER FUNCTIONS AND EVENTS
+
 function riskyUI:close()
     getPlayer():getModData().inspectWindowPos = {self.x, self.y}
 
     getPlayer():setVariable("IsInspectOneHandedRanged", "false")
     getPlayer():setVariable("IsInspectTwoHandedRanged", "false")
+
+    setJoypadFocus(getPlayer():getPlayerNum(), nil)
 
     self:setVisible(false)
     riskyInspectWindow = nil
@@ -426,7 +519,7 @@ end
 
 Events.OnWeaponSwing.Add(riskyUI.onAttack)
 
--- Windows position
+-- WINDOW POSITION
 riskyUI.onGameStart = function()
     if (getPlayer():getModData().inspectWindowPos == nil) then
         getPlayer():getModData().inspectWindowPos = {100, 100}
@@ -475,6 +568,7 @@ function selectAttachmentPane:new(x,y,category)
     o.category = category
     o.backgroundColor = {r=0, g=0, b=0, a=1};
     o.borderColor = {r=0.9, g=0.9, b=0.9, a=0.7};
+    o.origin = riskyInspectWindow
 
     o.currentPrimaryItem = getPlayer():getPrimaryHandItem()
     o.elements = {}
@@ -610,12 +704,27 @@ end
 
 function selectAttachmentPane:close()
     self:setVisible(false)
+    setJoypadFocus(getPlayer():getPlayerNum(), self.origin)
 end
 
 function selectAttachmentPane:onMouseDownOutside(x, y)
     if self:getIsVisible() and not self.vscroll:isMouseOver() then
         self:close()
     end
+end
+
+function selectAttachmentPane:onGainJoypadFocus(joypadData)
+	self.drawJoypadFocus = true
+end
+
+function selectAttachmentPane:onLoseJoypadFocus(joypadData)
+	self.drawJoypadFocus = false
+end
+
+function selectAttachmentPane:onJoypadDown(button)
+	if button == Joypad.BButton then
+        self:close()
+	end
 end
 
 -- SELECT MAGAZINE PANE
@@ -632,6 +741,7 @@ function selectMagazinePane:new(x,y,weapon)
     o.weapon = weapon
     o.backgroundColor = {r=0, g=0, b=0, a=1};
     o.borderColor = {r=0.9, g=0.9, b=0.9, a=0.7};
+    o.origin = riskyInspectWindow
     
     o.currentPrimaryItem = getPlayer():getPrimaryHandItem()
     o.elements = {}
@@ -715,10 +825,25 @@ end
 
 function selectMagazinePane:close()
     self:setVisible(false)
+    setJoypadFocus(getPlayer():getPlayerNum(), self.origin)
 end
 
 function selectMagazinePane:onMouseDownOutside(x, y)
     if self:getIsVisible() and not self.vscroll:isMouseOver() then
         self:close()
     end
+end
+
+function selectMagazinePane:onGainJoypadFocus(joypadData)
+	self.drawJoypadFocus = true
+end
+
+function selectMagazinePane:onLoseJoypadFocus(joypadData)
+	self.drawJoypadFocus = false
+end
+
+function selectMagazinePane:onJoypadDown(button)
+	if button == Joypad.BButton then
+        self:close()
+	end
 end

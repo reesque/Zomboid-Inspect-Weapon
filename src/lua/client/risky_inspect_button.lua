@@ -149,11 +149,22 @@ function attachmentButton:new (x, y, w, h, slotItem, attachingTo, attachmentType
 
     o:bringToTop();
 
+    -- Joypad
+    o.isJoypadFocused = false
+
     return o
 end
 
 function attachmentButton:render()
     ISButton.render(self)
+
+    if self:isMouseOver() == false then
+        if self.isJoypadFocused then
+            self.backgroundColor.a = 0.8
+        else
+            self.backgroundColor.a = 0.3
+        end
+    end
 
     if self.slotItem then
         -- Texture related
@@ -185,6 +196,21 @@ function attachmentButton:onMouseUp()
             local pane = selectAttachmentPane:new(riskyInspectWindow:getX() + self:getX() + 43, riskyInspectWindow:getY() + self:getY() - 3, self.attachmentType)
             pane:addToUIManager()
             pane:bringToTop()
+        end
+    end
+end
+
+function attachmentButton:joypadConfirm()
+    if self.slotItem then
+        ISTimedActionQueue.add(ISRemoveWeaponUpgrade:new(getPlayer(), self.attachingTo, self.slotItem, 50))
+    else
+        local screwdriver = getPlayer():getInventory():getFirstTagEvalRecurse("Screwdriver", predicateNotBroken)
+        if screwdriver then
+            local pane = selectAttachmentPane:new(riskyInspectWindow:getX() + self:getX() + 43, riskyInspectWindow:getY() + self:getY() - 3, self.attachmentType)
+            pane:addToUIManager()
+            pane:bringToTop()
+
+            setJoypadFocus(getPlayer():getPlayerNum(), pane)
         end
     end
 end
@@ -334,6 +360,8 @@ function magazineButton:new (x, y, w, h, slotItem, attachingTo)
 
     o.attachingTo = attachingTo
 
+    o.isJoypadFocused = false
+
     if slotItem then
         o.toolTip = ISToolTipInv:new(slotItem)
         o.toolTip:setOwner(o)
@@ -364,6 +392,14 @@ end
 
 function magazineButton:render()
     ISButton.render(self)
+
+    if self:isMouseOver() == false then
+        if self.isJoypadFocused then
+            self.backgroundColor.a = 0.8
+        else
+            self.backgroundColor.a = 0.3
+        end
+    end
 
     if self.slotItem then
         self:drawText(tostring(self.attachingTo:getCurrentAmmoCount()), 4, 0, 1.0, 1.0, 1.0, 1.0)
@@ -402,6 +438,18 @@ function magazineButton:close()
     ISButton.close(self)
     self.toolTip:setVisible(false)
     self.toolTip:removeFromUIManager()
+end
+
+function magazineButton:joypadConfirm()
+    if self.slotItem then
+        ISTimedActionQueue.add(ISEjectMagazine:new(getPlayer(), self.attachingTo))
+    else
+        local pane = selectMagazinePane:new(riskyInspectWindow:getX() + self:getX() + 43, riskyInspectWindow:getY() + self:getY() - 3, self.attachingTo)
+        pane:addToUIManager()
+        pane:bringToTop()
+
+        setJoypadFocus(getPlayer():getPlayerNum(), pane)
+    end
 end
 
 -- Add Magazine Button
@@ -499,9 +547,55 @@ function addMagazineButton:doMenu(x,y)
     ISInventoryPaneContextMenu.doMagazineMenu(getPlayer(), self.slotItem, context)
 end
 
-
 function addMagazineButton:close()
     ISButton.close(self)
     self.toolTip:setVisible(false)
     self.toolTip:removeFromUIManager()
+end
+
+-- Repair button
+
+repairButton = ISButton:derive("repairButton")
+
+function repairButton:new (x, y, w, h, title, clicktarget, onclick)
+    local o = {}
+    o = ISButton:new(x, y, w, h, title, clicktarget, onclick)
+
+    setmetatable(o, self)
+    self.__index = self
+
+    o.borderColor.r = 0.0
+    o.borderColor.g = 0.0
+    o.borderColor.b = 0.0
+    o.borderColor.a = 0.0
+
+    o.backgroundColor.r = 0.5
+    o.backgroundColor.g = 0.5
+    o.backgroundColor.b = 0.5
+    o.borderColor.a = 0.0;
+    o.backgroundColor.a = 0;
+    o.backgroundColorMouseOver.a = 0.8;
+
+    o:setImage(getTexture("media/ui/Panel_info_button.png"));
+
+    o.isJoypadFocused = false
+    o.onclick = onclick
+
+    return o
+end
+
+function repairButton:render()
+    ISButton.render(self)
+
+    if self:isMouseOver() == false then
+        if self.isJoypadFocused then
+            self.backgroundColor.a = 0.8
+        else
+            self.backgroundColor.a = 0.0
+        end
+    end
+end
+
+function repairButton:joypadConfirm()
+    self.onclick()
 end
