@@ -1,0 +1,22 @@
+IG_UI_PTBR = {
+	IGUI_RISKY_INSPECT_WEAPON = "Inspecionar arma",
+
+	IGUI_RISKY_CONDITION = "Condição",
+	IGUI_RISKY_PRISTINE = "Intacto",
+	IGUI_RISKY_USED = "Usada",
+	IGUI_RISKY_DAMAGED = "Danificada",
+	IGUI_RISKY_BADLY_DAMAGED = "Muito danificado",
+
+	IGUI_RISKY_REPAIR_NONE = "Nenhum sinal de reparo",
+	IGUI_RISKY_REPAIR_SLIGHTLY = "Levemente reparada",
+	IGUI_RISKY_REPAIR_HEAVILY = "Fortemente reparada",
+
+	IGUI_RISKY_ATTACHMENTS = "Acessórios",
+	IGUI_RISKY_NONE = "Nenhum",
+	IGUI_RISKY_CANON = "Corpo",
+	IGUI_RISKY_CLIP = "Pente",
+	IGUI_RISKY_RECOIL_PAD = "Almofada de recuo",
+	IGUI_RISKY_SCOPE = "Mira",
+	IGUI_RISKY_SLING = "Correia",
+	IGUI_RISKY_STOCK = "Coronha"
+}
