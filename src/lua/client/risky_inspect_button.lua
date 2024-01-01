@@ -161,8 +161,19 @@ function attachmentButton:render()
     if self:isMouseOver() == false then
         if self.isJoypadFocused then
             self.backgroundColor.a = 0.8
+            if self.slotItem then
+                self.toolTip.followMouse = false
+                self.toolTip:setX(80)
+                self.toolTip:setY(30)
+                self.toolTip:setVisible(true)
+                self.toolTip:bringToTop()
+            end
         else
             self.backgroundColor.a = 0.3
+            if self.slotItem then
+                self.toolTip.followMouse = false
+                self.toolTip:setVisible(false)
+            end
         end
     end
 
@@ -174,11 +185,15 @@ function attachmentButton:render()
             self:setTextureRGBA(self.currentTint:getRedFloat(), self.currentTint:getGreenFloat(), self.currentTint:getBlueFloat(), self.currentTint:getAlphaFloat())
         end
 
-        if self:isMouseOver() then
-            self.toolTip:setVisible(true)
-            self.toolTip:bringToTop()
-        else
-            self.toolTip:setVisible(false)
+        if not self.isJoypadFocused then
+            if self:isMouseOver() then
+                self.toolTip.followMouse = true
+                self.toolTip:setVisible(true)
+                self.toolTip:bringToTop()
+            else
+                self.toolTip.followMouse = true
+                self.toolTip:setVisible(false)
+            end
         end
     end
 end
@@ -301,8 +316,19 @@ function addAttachmentButton:render()
     if self:isMouseOver() == false then
         if self.isJoypadFocused then
             self.backgroundColor.a = 0.8
+            if self.slotItem then
+                self.toolTip.followMouse = false
+                self.toolTip:setX(80)
+                self.toolTip:setY(30)
+                self.toolTip:setVisible(true)
+                self.toolTip:bringToTop()
+            end
         else
             self.backgroundColor.a = 0.3
+            if self.slotItem then
+                self.toolTip.followMouse = false
+                self.toolTip:setVisible(false)
+            end
         end
     end
 
@@ -314,11 +340,15 @@ function addAttachmentButton:render()
             self:setTextureRGBA(self.currentTint:getRedFloat(), self.currentTint:getGreenFloat(), self.currentTint:getBlueFloat(), self.currentTint:getAlphaFloat())
         end
 
-        if self:isMouseOver() then
-            self.toolTip:setVisible(true)
-            self.toolTip:bringToTop()
-        else
-            self.toolTip:setVisible(false)
+        if not self.isJoypadFocused then
+            if self:isMouseOver() then
+                self.toolTip.followMouse = true
+                self.toolTip:setVisible(true)
+                self.toolTip:bringToTop()
+            else
+                self.toolTip.followMouse = true
+                self.toolTip:setVisible(false)
+            end
         end
     end
 end
@@ -415,8 +445,19 @@ function magazineButton:render()
     if self:isMouseOver() == false then
         if self.isJoypadFocused then
             self.backgroundColor.a = 0.8
+            if self.slotItem then
+                self.toolTip.followMouse = false
+                self.toolTip:setX(80)
+                self.toolTip:setY(30)
+                self.toolTip:setVisible(true)
+                self.toolTip:bringToTop()
+            end
         else
             self.backgroundColor.a = 0.3
+            if self.slotItem then
+                self.toolTip.followMouse = false
+                self.toolTip:setVisible(false)
+            end
         end
     end
 
@@ -430,11 +471,15 @@ function magazineButton:render()
             self:setTextureRGBA(self.currentTint:getRedFloat(), self.currentTint:getGreenFloat(), self.currentTint:getBlueFloat(), self.currentTint:getAlphaFloat())
         end
 
-        if self:isMouseOver() then
-            self.toolTip:setVisible(true)
-            self.toolTip:bringToTop()
-        else
-            self.toolTip:setVisible(false)
+        if not self.isJoypadFocused then
+            if self:isMouseOver() then
+                self.toolTip.followMouse = true
+                self.toolTip:setVisible(true)
+                self.toolTip:bringToTop()
+            else
+                self.toolTip.followMouse = true
+                self.toolTip:setVisible(false)
+            end
         end
     end
 end
@@ -504,6 +549,7 @@ function addMagazineButton:new (x, y, w, h, slotItem, attachingTo, magList)
 
     if slotItem then
         o.toolTip = ISToolTipInv:new(slotItem)
+        o.toolTip:initialise()
         o.toolTip:setOwner(o)
         o.toolTip:setVisible(false)
         o.toolTip:addToUIManager()
@@ -536,8 +582,19 @@ function addMagazineButton:render()
     if self:isMouseOver() == false then
         if self.isJoypadFocused then
             self.backgroundColor.a = 0.8
+            if self.slotItem and (self.contextMenu == nil or not self.contextMenu.visibleCheck) then
+                self.toolTip.followMouse = false
+                self.toolTip:setX(80)
+                self.toolTip:setY(30)
+                self.toolTip:setVisible(true)
+                self.toolTip:bringToTop()
+            end
         else
             self.backgroundColor.a = 0.5
+            if self.slotItem then
+                self.toolTip.followMouse = false
+                self.toolTip:setVisible(false)
+            end
         end
     end
 
@@ -551,11 +608,15 @@ function addMagazineButton:render()
             self:setTextureRGBA(self.currentTint:getRedFloat(), self.currentTint:getGreenFloat(), self.currentTint:getBlueFloat(), self.currentTint:getAlphaFloat())
         end
 
-        if self:isMouseOver() and (self.contextMenu == nil or not self.contextMenu.visibleCheck) then
-            self.toolTip:setVisible(true)
-            self.toolTip:bringToTop()
-        else
-            self.toolTip:setVisible(false)
+        if not self.isJoypadFocused then
+            if self:isMouseOver() and (self.contextMenu == nil or not self.contextMenu.visibleCheck) then
+                self.toolTip.followMouse = true
+                self.toolTip:setVisible(true)
+                self.toolTip:bringToTop()
+            else
+                self.toolTip.followMouse = true
+                self.toolTip:setVisible(false)
+            end
         end
     end
 end
