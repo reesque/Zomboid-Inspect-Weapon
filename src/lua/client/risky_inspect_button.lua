@@ -257,6 +257,7 @@ function addAttachmentButton:new (x, y, w, h, slotItem, attachingTo, enabled)
     end
 
     o.attachingTo = attachingTo
+    o.isJoypadFocused = false
 
     if slotItem then
         o.toolTip = ISToolTipInv:new(slotItem)
@@ -297,6 +298,14 @@ end
 function addAttachmentButton:render()
     ISButton.render(self)
 
+    if self:isMouseOver() == false then
+        if self.isJoypadFocused then
+            self.backgroundColor.a = 0.8
+        else
+            self.backgroundColor.a = 0.3
+        end
+    end
+
     if self.slotItem then
         -- Texture related
         self:setImage(self.slotItem:getTexture())
@@ -328,6 +337,16 @@ function addAttachmentButton:close()
     ISButton.close(self)
     self.toolTip:setVisible(false)
     self.toolTip:removeFromUIManager()
+end
+
+function addAttachmentButton:joypadConfirm()
+    if self.slotItem and self.enabled then
+        local screwdriver = getPlayer():getInventory():getFirstTagEvalRecurse("Screwdriver", predicateNotBroken)
+        if screwdriver then
+            ISTimedActionQueue.add(ISUpgradeWeapon:new(getPlayer(), self.attachingTo, self.slotItem, 50));
+            ISTimedActionQueue.add(ISEquipWeaponAction:new(getPlayer(), self.attachingTo, 50, true, self.attachingTo:isTwoHandWeapon()))
+        end
+    end
 end
 
 -- Magazine Button
@@ -456,7 +475,7 @@ end
 
 addMagazineButton = ISButton:derive("addMagazineButton")
 
-function addMagazineButton:new (x, y, w, h, slotItem, attachingTo)
+function addMagazineButton:new (x, y, w, h, slotItem, attachingTo, magList)
     local o = {}
     o = ISButton:new(x, y, w, h)
 
@@ -481,6 +500,7 @@ function addMagazineButton:new (x, y, w, h, slotItem, attachingTo)
     o.currentTint = ImmutableColor.new(1.0, 1.0, 1.0, 1.0)
 
     o.attachingTo = attachingTo
+    o.isJoypadFocused = false
 
     if slotItem then
         o.toolTip = ISToolTipInv:new(slotItem)
@@ -513,6 +533,14 @@ end
 function addMagazineButton:render()
     ISButton.render(self)
 
+    if self:isMouseOver() == false then
+        if self.isJoypadFocused then
+            self.backgroundColor.a = 0.8
+        else
+            self.backgroundColor.a = 0.5
+        end
+    end
+
     if self.slotItem then
         self:drawText(tostring(self.slotItem:getCurrentAmmoCount()), 4, 0, 1.0, 1.0, 1.0, 1.0)
 
@@ -539,11 +567,11 @@ function addMagazineButton:onMouseDown()
 end
 
 function addMagazineButton:onRightMouseUp(x,y)
-    self:doMenu(x,y)
+    self:doMenu(getMouseX(), getMouseY())
 end
 
 function addMagazineButton:doMenu(x,y)
-    local context = ISContextMenu.get(getPlayer():getPlayerNum(), getMouseX(), getMouseY())
+    local context = ISContextMenu.get(getPlayer():getPlayerNum(), x, y)
     ISInventoryPaneContextMenu.doMagazineMenu(getPlayer(), self.slotItem, context)
 end
 
@@ -551,6 +579,16 @@ function addMagazineButton:close()
     ISButton.close(self)
     self.toolTip:setVisible(false)
     self.toolTip:removeFromUIManager()
+end
+
+function addMagazineButton:joypadConfirm()
+    if self.slotItem then
+        ISTimedActionQueue.add(ISInsertMagazine:new(getPlayer(), self.attachingTo, self.slotItem))
+    end
+end
+
+function addMagazineButton:joypadMenu()
+    self:doMenu(riskyInspectWindow:getX() + self:getX(), riskyInspectWindow:getY() + self:getY())
 end
 
 -- Repair button

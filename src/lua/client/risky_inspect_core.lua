@@ -36,7 +36,10 @@ function riskyUI:new(x, y, width, height)
 
     -- Hack to get joypad focus on create
     setJoypadFocus(getPlayer():getPlayerNum(), o)
-    o.currentFocus = o
+    o.elements = {}
+    o.currentFocus = 0
+    
+    o.elements[0] = o
 
 	return o
 end
@@ -233,7 +236,8 @@ function riskyUI:renderInventory()
             repairBtn:initialise();
             self:addChild(repairBtn);
 
-            self.downFocus = repairBtn
+            self.elements[1] = repairBtn
+            self.downFocus = 1
         end
 
         self.panelWidth = math.max(getTextManager():MeasureStringX(UIFont.Medium, weapon:getDisplayName()),
@@ -293,6 +297,7 @@ function riskyUI:renderInventory()
             canonBtn = attachmentButton:new(20, 130, 40, 40, weapon:getCanon(), weapon, WeaponPart.TYPE_CANON)
             canonBtn:bringToTop()
             self:addChild(canonBtn)
+            self.elements[2] = canonBtn
 
             -- Clip - DISABLE UNTIL THEY INTRODUCE CLIP ATTACHMENTS
             --item = attachmentButton:new(20, 180, 40, 40, weapon:getClip(), weapon, WeaponPart.TYPE_CLIP)
@@ -308,11 +313,13 @@ function riskyUI:renderInventory()
             magazineBtn = magazineButton:new(20, 180, 40, 40, magazine, weapon)
             magazineBtn:bringToTop()
             self:addChild(magazineBtn)
+            self.elements[3] = magazineBtn
 
             -- Recoil Pad
             padBtn = attachmentButton:new(20, 230, 40, 40, weapon:getRecoilpad(), weapon, WeaponPart.TYPE_RECOILPAD)
             padBtn:bringToTop()
             self:addChild(padBtn)
+            self.elements[4] = padBtn
 
             local canonWidth, clipWidth, recoilPadWidth, scopeWidth, slingWidth, stockWidth
 
@@ -331,44 +338,47 @@ function riskyUI:renderInventory()
             scopeBtn = attachmentButton:new(leftWidth + 100, 130, 40, 40, weapon:getScope(), weapon, WeaponPart.TYPE_SCOPE)
             scopeBtn:bringToTop()
             self:addChild(scopeBtn)
+            self.elements[5] = scopeBtn
 
             -- Sling
             slingBtn = attachmentButton:new(leftWidth + 100, 180, 40, 40, weapon:getSling(), weapon, WeaponPart.TYPE_SLING)
             slingBtn:bringToTop()
             self:addChild(slingBtn)
+            self.elements[6] = slingBtn
 
             -- Stock
             stockBtn = attachmentButton:new(leftWidth + 100, 230, 40, 40, weapon:getStock(), weapon, WeaponPart.TYPE_STOCK)
             stockBtn:bringToTop()
             self:addChild(stockBtn)
+            self.elements[7] = stockBtn
 
             -- Joypad focus bind
-            canonBtn.downFocus = magazineBtn
-            canonBtn.rightFocus = scopeBtn
+            canonBtn.downFocus = 3
+            canonBtn.rightFocus = 5
 
-            magazineBtn.upFocus = canonBtn
-            magazineBtn.downFocus = padBtn
-            magazineBtn.rightFocus = slingBtn
+            magazineBtn.upFocus = 2
+            magazineBtn.downFocus = 4
+            magazineBtn.rightFocus = 6
 
-            padBtn.upFocus = magazineBtn
-            padBtn.rightFocus = stockBtn
+            padBtn.upFocus = 3
+            padBtn.rightFocus = 7
 
-            scopeBtn.downFocus = slingBtn
-            scopeBtn.leftFocus = canonBtn
+            scopeBtn.downFocus = 6
+            scopeBtn.leftFocus = 2
 
-            slingBtn.upFocus = scopeBtn
-            slingBtn.downFocus = stockBtn
-            slingBtn.leftFocus = magazineBtn
+            slingBtn.upFocus = 5
+            slingBtn.downFocus = 7
+            slingBtn.leftFocus = 3
 
-            stockBtn.upFocus = slingBtn
-            stockBtn.leftFocus = padBtn
+            stockBtn.upFocus = 6
+            stockBtn.leftFocus = 4
             
             if repairBtn == nil then
-                self.downFocus = canonBtn
+                self.downFocus = 2
             else
-                repairBtn.downFocus = canonBtn
-                canonBtn.upFocus = repairBtn
-                scopeBtn.upFocus = repairBtn
+                repairBtn.downFocus = 2
+                canonBtn.upFocus = 1
+                scopeBtn.upFocus = 1
             end
 
             -- Measure width
@@ -386,6 +396,10 @@ function riskyUI:renderInventory()
         else
             self.panelHeight = 110
         end
+
+        -- Joypad -------------------------------------------------
+        self.elements[self.currentFocus].isJoypadFocused = true
+        -----------------------------------------------------------
     end
 
     self:setWidth(self.panelWidth)
@@ -395,42 +409,46 @@ end
 -- GAMEPAD
 
 function riskyUI:onJoypadDirDown(joypadData)
-    if self.currentFocus.downFocus ~= nil then
-        self.currentFocus.downFocus.isJoypadFocused = true
-        self.currentFocus.isJoypadFocused = false
-        self.currentFocus = self.currentFocus.downFocus
+    local currentCell = self.elements[self.currentFocus]
+    if currentCell.downFocus ~= nil then
+        self.elements[currentCell.downFocus].isJoypadFocused = true
+        currentCell.isJoypadFocused = false
+        self.currentFocus = currentCell.downFocus
     end
 end
 
 function riskyUI:onJoypadDirUp(joypadData)
-    if self.currentFocus.upFocus ~= nil then
-        self.currentFocus.upFocus.isJoypadFocused = true
-        self.currentFocus.isJoypadFocused = false
-        self.currentFocus = self.currentFocus.upFocus
+    local currentCell = self.elements[self.currentFocus]
+    if currentCell.upFocus ~= nil then
+        self.elements[currentCell.upFocus].isJoypadFocused = true
+        currentCell.isJoypadFocused = false
+        self.currentFocus = currentCell.upFocus
     end
 end
 
 function riskyUI:onJoypadDirLeft(joypadData)
-    if self.currentFocus.leftFocus ~= nil then
-        self.currentFocus.leftFocus.isJoypadFocused = true
-        self.currentFocus.isJoypadFocused = false
-        self.currentFocus = self.currentFocus.leftFocus
+    local currentCell = self.elements[self.currentFocus]
+    if currentCell.leftFocus ~= nil then
+        self.elements[currentCell.leftFocus].isJoypadFocused = true
+        currentCell.isJoypadFocused = false
+        self.currentFocus = currentCell.leftFocus
     end
 end
 
 function riskyUI:onJoypadDirRight(joypadData)
-    if self.currentFocus.rightFocus ~= nil then
-        self.currentFocus.rightFocus.isJoypadFocused = true
-        self.currentFocus.isJoypadFocused = false
-        self.currentFocus = self.currentFocus.rightFocus
+    local currentCell = self.elements[self.currentFocus]
+    if currentCell.rightFocus ~= nil then
+        self.elements[currentCell.rightFocus].isJoypadFocused = true
+        currentCell.isJoypadFocused = false
+        self.currentFocus = currentCell.rightFocus
     end
 end
 
 function riskyUI:onJoypadDown(button)
 	if button == Joypad.BButton then
         self:close()
-    elseif button == Joypad.AButton then
-        self.currentFocus:joypadConfirm()
+    elseif button == Joypad.AButton and self.currentFocus ~= 0 then
+        self.elements[self.currentFocus]:joypadConfirm()
 	end
 end
 
@@ -572,6 +590,7 @@ function selectAttachmentPane:new(x,y,category)
 
     o.currentPrimaryItem = getPlayer():getPrimaryHandItem()
     o.elements = {}
+    o.currentFocus = 0
 
     if (riskyShowPotentialAttachment) then
         o.potentialAttachment = {}
@@ -658,6 +677,11 @@ function selectAttachmentPane:renderInventory()
 
                     local item = addAttachmentButton:new(x, y, 40, 40, part, weapon, true)
 
+                    -- Joypad only----------------
+                    item.joy_x = math.fmod(itemNum, 5)
+                    item.joy_y = rowCount
+                    ------------------------------
+
                     table.insert(self.elements, item)
                     item:bringToTop()
                     self:addChild(item)
@@ -682,6 +706,11 @@ function selectAttachmentPane:renderInventory()
 
                     local item = addAttachmentButton:new(x, y, 40, 40, potentialPart, weapon, false)
 
+                    -- Joypad only----------------
+                    item.joy_x = math.fmod(itemNum, 5)
+                    item.joy_y = rowCount
+                    ------------------------------
+
                     table.insert(self.elements, item)
                     item:bringToTop()
                     self:addChild(item)
@@ -692,6 +721,11 @@ function selectAttachmentPane:renderInventory()
                 tempContainer:clear()
             end
             tempContainer = nil
+        end
+
+        if (#self.elements ~= 0) then
+            self.elements[1].isJoypadFocused = true
+            self.currentFocus = 0
         end
 
         self:setScrollHeight(42 * (rowCount + 1))
@@ -724,16 +758,83 @@ end
 function selectAttachmentPane:onJoypadDown(button)
 	if button == Joypad.BButton then
         self:close()
+    elseif button == Joypad.AButton and #self.elements ~= 0 and self.elements[self.currentFocus + 1].enabled then
+        self:close()
+        self.elements[self.currentFocus + 1]:joypadConfirm()
 	end
+end
+
+function selectAttachmentPane:onJoypadDirDown(joypadData)
+    if (#self.elements ~= 0 ) then
+        local currentCell = self.elements[self.currentFocus + 1]
+        local targetIdx = (((currentCell.joy_y + 1) * 5) + currentCell.joy_x) + 1
+        if targetIdx > 0 and targetIdx <= #self.elements then
+            self.elements[targetIdx].isJoypadFocused = true
+            currentCell.isJoypadFocused = false
+            self.currentFocus = targetIdx - 1
+            
+            if (self.elements[self.currentFocus + 1].joy_y - 2 > 0) then
+                self:setYScroll(-(41 * (self.elements[self.currentFocus + 1].joy_y - 2)))
+            end
+        end
+    end
+end
+
+function selectAttachmentPane:onJoypadDirUp(joypadData)
+    if (#self.elements ~= 0 ) then
+        local currentCell = self.elements[self.currentFocus + 1]
+        local targetIdx = (((currentCell.joy_y - 1) * 5) + currentCell.joy_x) + 1
+        if targetIdx > 0 and targetIdx <= #self.elements then
+            self.elements[targetIdx].isJoypadFocused = true
+            currentCell.isJoypadFocused = false
+            self.currentFocus = targetIdx - 1
+
+            if self.elements[self.currentFocus + 1].joy_y < math.abs(self:getYScroll() / 41) then
+                self:setYScroll(self:getYScroll() + 41)
+            end
+        end
+    end
+end
+
+function selectAttachmentPane:onJoypadDirLeft(joypadData)
+    if (#self.elements ~= 0 ) then
+        local currentCell = self.elements[self.currentFocus + 1]
+        local targetIdx = ((currentCell.joy_y * 5) + currentCell.joy_x - 1) + 1
+        if targetIdx > 0 and targetIdx <= #self.elements then
+            self.elements[targetIdx].isJoypadFocused = true
+            currentCell.isJoypadFocused = false
+            self.currentFocus = targetIdx - 1
+
+            if self.elements[self.currentFocus + 1].joy_y < math.abs(self:getYScroll() / 41) then
+                self:setYScroll(self:getYScroll() + 41)
+            end
+        end
+    end
+end
+
+function selectAttachmentPane:onJoypadDirRight(joypadData)
+    if (#self.elements ~= 0 ) then
+        local currentCell = self.elements[self.currentFocus + 1]
+        local targetIdx = ((currentCell.joy_y * 5) + currentCell.joy_x + 1) + 1
+        if targetIdx > 0 and targetIdx <= #self.elements then
+            self.elements[targetIdx].isJoypadFocused = true
+            currentCell.isJoypadFocused = false
+            self.currentFocus = targetIdx - 1
+            
+            if (self.elements[self.currentFocus + 1].joy_y - 2 > 0) then
+                self:setYScroll(-(41 * (self.elements[self.currentFocus + 1].joy_y - 2)))
+            end
+        end
+    end
 end
 
 -- SELECT MAGAZINE PANE
 
-selectMagazinePane = ISPanel:derive("selectMagazinePane")
+selectMagazinePane = ISPanelJoypad:derive("selectMagazinePane")
 
 function selectMagazinePane:new(x,y,weapon)
     local o = {}
-    o = ISPanel:new(x, y, 40 * 5 + 20, 126);
+    o = ISPanelJoypad:new(x, y, 40 * 5 + 20, 126);
 
     setmetatable(o, self)
     self.__index = self
@@ -745,6 +846,7 @@ function selectMagazinePane:new(x,y,weapon)
     
     o.currentPrimaryItem = getPlayer():getPrimaryHandItem()
     o.elements = {}
+    o.currentFocus = 0
 
     return o
 end
@@ -808,11 +910,21 @@ function selectMagazinePane:renderInventory()
 
             local item = addMagazineButton:new(x, y, 40, 40, magList:get(i), weapon)
 
+            -- Joypad only----------------
+            item.joy_x = math.fmod(itemNum, 5)
+            item.joy_y = rowCount
+            ------------------------------
+
             table.insert(self.elements, item)
             item:bringToTop()
             self:addChild(item)
 
             itemNum = itemNum + 1
+        end
+
+        if (#self.elements ~= 0) then
+            self.elements[1].isJoypadFocused = true
+            self.currentFocus = 0
         end
 
         self:setScrollHeight(42 * (rowCount + 1))
@@ -845,5 +957,73 @@ end
 function selectMagazinePane:onJoypadDown(button)
 	if button == Joypad.BButton then
         self:close()
+    elseif button == Joypad.AButton and #self.elements ~= 0 then
+        self:close()
+        self.elements[self.currentFocus + 1]:joypadConfirm()
+    elseif button == Joypad.XButton and #self.elements ~= 0  then
+        self.elements[self.currentFocus + 1]:joypadMenu()
 	end
+end
+
+function selectMagazinePane:onJoypadDirDown(joypadData)
+    if (#self.elements ~= 0 ) then
+        local currentCell = self.elements[self.currentFocus + 1]
+        local targetIdx = (((currentCell.joy_y + 1) * 5) + currentCell.joy_x) + 1
+        if targetIdx > 0 and targetIdx <= #self.elements then
+            self.elements[targetIdx].isJoypadFocused = true
+            currentCell.isJoypadFocused = false
+            self.currentFocus = targetIdx - 1
+            
+            if (self.elements[self.currentFocus + 1].joy_y - 2 > 0) then
+                self:setYScroll(-(41 * (self.elements[self.currentFocus + 1].joy_y - 2)))
+            end
+        end
+    end
+end
+
+function selectMagazinePane:onJoypadDirUp(joypadData)
+    if (#self.elements ~= 0 ) then
+        local currentCell = self.elements[self.currentFocus + 1]
+        local targetIdx = (((currentCell.joy_y - 1) * 5) + currentCell.joy_x) + 1
+        if targetIdx > 0 and targetIdx <= #self.elements then
+            self.elements[targetIdx].isJoypadFocused = true
+            currentCell.isJoypadFocused = false
+            self.currentFocus = targetIdx - 1
+
+            if self.elements[self.currentFocus + 1].joy_y < math.abs(self:getYScroll() / 41) then
+                self:setYScroll(self:getYScroll() + 41)
+            end
+        end
+    end
+end
+
+function selectMagazinePane:onJoypadDirLeft(joypadData)
+    if (#self.elements ~= 0 ) then
+        local currentCell = self.elements[self.currentFocus + 1]
+        local targetIdx = ((currentCell.joy_y * 5) + currentCell.joy_x - 1) + 1
+        if targetIdx > 0 and targetIdx <= #self.elements then
+            self.elements[targetIdx].isJoypadFocused = true
+            currentCell.isJoypadFocused = false
+            self.currentFocus = targetIdx - 1
+
+            if self.elements[self.currentFocus + 1].joy_y < math.abs(self:getYScroll() / 41) then
+                self:setYScroll(self:getYScroll() + 41)
+            end
+        end
+    end
+end
+
+function selectMagazinePane:onJoypadDirRight(joypadData)
+    if (#self.elements ~= 0 ) then
+        local currentCell = self.elements[self.currentFocus + 1]
+        local targetIdx = ((currentCell.joy_y * 5) + currentCell.joy_x + 1) + 1
+        if targetIdx > 0 and targetIdx <= #self.elements then
+            self.elements[targetIdx].isJoypadFocused = true
+            currentCell.isJoypadFocused = false
+            self.currentFocus = targetIdx - 1
+            if (self.elements[self.currentFocus + 1].joy_y - 2 > 0) then
+                self:setYScroll(-(41 * (self.elements[self.currentFocus + 1].joy_y - 2)))
+            end
+        end
+    end
 end
