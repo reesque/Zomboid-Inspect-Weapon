@@ -40,8 +40,13 @@ function riskyUI:new(x, y, width, height)
     o.currentFocus = 0
     
     o.elements[0] = o
+    o.overrideBPrompt = true
 
 	return o
+end
+
+function riskyUI:isValidPrompt()
+    return true
 end
 
 function riskyUI:update()
@@ -452,6 +457,26 @@ function riskyUI:onJoypadDown(button)
 	end
 end
 
+function riskyUI:getBPrompt()
+    return getText('IGUI_RISKY_BACK')
+end
+
+function riskyUI:getAPrompt()
+    return self.elements[self.currentFocus]:joypadPrompt()
+end
+
+function riskyUI:getXPrompt()
+    return nil
+end
+
+function riskyUI:getYPrompt()
+    return nil
+end
+
+function riskyUI:joypadPrompt()
+    return nil
+end
+
 function riskyUI:onGainJoypadFocus(joypadData)
 	self.drawJoypadFocus = true
 end
@@ -591,6 +616,7 @@ function selectAttachmentPane:new(x,y,category)
     o.currentPrimaryItem = getPlayer():getPrimaryHandItem()
     o.elements = {}
     o.currentFocus = 0
+    o.overrideBPrompt = true
 
     if (riskyShowPotentialAttachment) then
         o.potentialAttachment = {}
@@ -605,6 +631,10 @@ function selectAttachmentPane:new(x,y,category)
     end
 
     return o
+end
+
+function selectAttachmentPane:isValidPrompt()
+    return true
 end
 
 function selectAttachmentPane:prerender()
@@ -644,6 +674,7 @@ function selectAttachmentPane:update()
                     self:removeChild(self.elements[i])
                 end
             end
+            self.elements = {}
 
             self:renderInventory()
         end
@@ -723,7 +754,7 @@ function selectAttachmentPane:renderInventory()
             tempContainer = nil
         end
 
-        if (#self.elements ~= 0) then
+        if (getJoypadFocus(getPlayer():getPlayerNum()) == self and #self.elements ~= 0) then
             self.elements[1].isJoypadFocused = true
             self.currentFocus = 0
         end
@@ -762,6 +793,24 @@ function selectAttachmentPane:onJoypadDown(button)
         self:close()
         self.elements[self.currentFocus + 1]:joypadConfirm()
 	end
+end
+
+function selectAttachmentPane:getBPrompt()
+    return getText('IGUI_RISKY_BACK')
+end
+
+function selectAttachmentPane:getAPrompt()
+    if #self.elements ~= 0 then
+        return self.elements[self.currentFocus + 1]:joypadPrompt()
+    end
+end
+
+function selectAttachmentPane:getXPrompt()
+    return nil
+end
+
+function selectAttachmentPane:getYPrompt()
+    return nil
 end
 
 function selectAttachmentPane:onJoypadDirDown(joypadData)
@@ -847,8 +896,13 @@ function selectMagazinePane:new(x,y,weapon)
     o.currentPrimaryItem = getPlayer():getPrimaryHandItem()
     o.elements = {}
     o.currentFocus = 0
+    o.overrideBPrompt = true
 
     return o
+end
+
+function selectMagazinePane:isValidPrompt()
+    return true
 end
 
 function selectMagazinePane:prerender()
@@ -888,6 +942,7 @@ function selectMagazinePane:update()
                     self:removeChild(self.elements[i])
                 end
             end
+            self.elements = {}
 
             self:renderInventory()
         end
@@ -908,7 +963,7 @@ function selectMagazinePane:renderInventory()
             local x = 2 + 41 * math.fmod(itemNum, 5)
             local y = 2 + 41 * rowCount
 
-            local item = addMagazineButton:new(x, y, 40, 40, magList:get(i), weapon)
+            local item = addMagazineButton:new(x, y, 40, 40, magList:get(i), weapon, self)
 
             -- Joypad only----------------
             item.joy_x = math.fmod(itemNum, 5)
@@ -922,9 +977,8 @@ function selectMagazinePane:renderInventory()
             itemNum = itemNum + 1
         end
 
-        if (#self.elements ~= 0) then
-            self.elements[1].isJoypadFocused = true
-            self.currentFocus = 0
+        if (getJoypadFocus(getPlayer():getPlayerNum()) == self and #self.elements ~= 0 and self.currentFocus < #self.elements) then
+            self.elements[self.currentFocus + 1].isJoypadFocused = true
         end
 
         self:setScrollHeight(42 * (rowCount + 1))
@@ -952,6 +1006,24 @@ end
 
 function selectMagazinePane:onLoseJoypadFocus(joypadData)
 	self.drawJoypadFocus = false
+end
+
+function selectMagazinePane:getBPrompt()
+    return getText('IGUI_RISKY_BACK')
+end
+
+function selectMagazinePane:getAPrompt()
+    if (#self.elements ~= 0) then
+        return self.elements[self.currentFocus + 1]:joypadPrompt()
+    end
+end
+
+function selectMagazinePane:getXPrompt()
+    return getText("IGUI_Controller_Interact")
+end
+
+function selectMagazinePane:getYPrompt()
+    return nil
 end
 
 function selectMagazinePane:onJoypadDown(button)

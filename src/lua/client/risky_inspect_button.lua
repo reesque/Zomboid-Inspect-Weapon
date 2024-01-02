@@ -230,6 +230,14 @@ function attachmentButton:joypadConfirm()
     end
 end
 
+function attachmentButton:joypadPrompt()
+    if self.slotItem then
+        return getText('IGUI_RISKY_DETACH')
+    else
+        return getText('IGUI_RISKY_ATTACH')
+    end
+end
+
 function attachmentButton:close()
     ISButton.close(self)
     self.toolTip:setVisible(false)
@@ -379,6 +387,14 @@ function addAttachmentButton:joypadConfirm()
     end
 end
 
+function addAttachmentButton:joypadPrompt()
+    if self.slotItem and self.enabled then
+        return getText('IGUI_RISKY_ATTACH')
+    else
+        return nil
+    end
+end
+
 -- Magazine Button
 
 magazineButton = ISButton:derive("magazineButton")
@@ -516,11 +532,19 @@ function magazineButton:joypadConfirm()
     end
 end
 
+function magazineButton:joypadPrompt()
+    if self.slotItem then
+        return getText('IGUI_RISKY_EJECT')
+    else
+        return getText('IGUI_RISKY_ATTACH')
+    end
+end
+
 -- Add Magazine Button
 
 addMagazineButton = ISButton:derive("addMagazineButton")
 
-function addMagazineButton:new (x, y, w, h, slotItem, attachingTo, magList)
+function addMagazineButton:new (x, y, w, h, slotItem, attachingTo, origin)
     local o = {}
     o = ISButton:new(x, y, w, h)
 
@@ -546,6 +570,7 @@ function addMagazineButton:new (x, y, w, h, slotItem, attachingTo, magList)
 
     o.attachingTo = attachingTo
     o.isJoypadFocused = false
+    o.origin = origin
 
     if slotItem then
         o.toolTip = ISToolTipInv:new(slotItem)
@@ -634,6 +659,9 @@ end
 function addMagazineButton:doMenu(x,y)
     local context = ISContextMenu.get(getPlayer():getPlayerNum(), x, y)
     ISInventoryPaneContextMenu.doMagazineMenu(getPlayer(), self.slotItem, context)
+    context.origin = self.origin
+    context:bringToTop()
+    setJoypadFocus(getPlayer():getPlayerNum(), context)
 end
 
 function addMagazineButton:close()
@@ -648,8 +676,12 @@ function addMagazineButton:joypadConfirm()
     end
 end
 
+function addMagazineButton:joypadPrompt()
+    return getText('IGUI_RISKY_ATTACH')
+end
+
 function addMagazineButton:joypadMenu()
-    self:doMenu(riskyInspectWindow:getX() + self:getX(), riskyInspectWindow:getY() + self:getY())
+    self:doMenu(80, 130)
 end
 
 -- Repair button
@@ -697,4 +729,8 @@ end
 
 function repairButton:joypadConfirm()
     self.onclick()
+end
+
+function repairButton:joypadPrompt()
+    return getText('IGUI_RISKY_REPAIR')
 end

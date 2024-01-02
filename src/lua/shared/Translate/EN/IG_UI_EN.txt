@@ -17,4 +17,10 @@ IG_UI_EN = {
 	IGUI_RISKY_SLING = "Sling",
 	IGUI_RISKY_STOCK = "Stock",
 	IGUI_RISKY_AMMO = "Ammo"
+
+	IGUI_RISKY_BACK = "Back"
+	IGUI_RISKY_REPAIR = "Repair"
+	IGUI_RISKY_DETACH = "Detach"
+	IGUI_RISKY_EJECT = "Eject"
+	IGUI_RISKY_ATTACH = "Attach"
 }
